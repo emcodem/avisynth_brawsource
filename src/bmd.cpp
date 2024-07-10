@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <fstream>  
 #include "common.h"
+#include <comutil.h>
 
 #ifdef _DEBUG
 #include <cassert>
@@ -15,6 +16,8 @@
 #else
 #define VERIFY(condition) condition
 #endif
+
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 static const BlackmagicRawResourceFormat s_resourceFormat = blackmagicRawResourceFormatBGRAU8;// blackmagicRawResourceFormatBGRAU8;
 static const int s_maxJobsInFlight = 3;
@@ -221,7 +224,16 @@ HRESULT BRAWSDKProcessor::openFile(BSTR fileName) {
 			throw std::runtime_error(buff);
 		}*/
 
-		BSTR libraryPath = SysAllocString(L"../../Libraries");
+		/* get path of current dll (BRawsource.dll) as base for locating blackmagicapi dll*/
+		TCHAR   DllPath[MAX_PATH] = { 0 };
+		GetModuleFileName((HINSTANCE)&__ImageBase, DllPath, _countof(DllPath));
+
+		_bstr_t bstr = _bstr_t(DllPath);
+		std::string helperstring = bstr;
+		std::string pathname = helperstring.substr(0,helperstring.find_last_of("\\") + 1);
+		pathname = pathname.append("brawsource_dlls");
+
+		BSTR libraryPath = _bstr_t(pathname.c_str());
 		factory = CreateBlackmagicRawFactoryInstanceFromPath(libraryPath);
 		SysFreeString(libraryPath);
 		if (factory == nullptr)
