@@ -23,7 +23,7 @@ public:
     float framerate;
     int framerate_num;
     int framerate_den;
-	HRESULT openFile(BSTR fileName);
+	HRESULT openFile(BSTR fileName, int bitmode);
     bool* getFrameByNum(int frameNum, uint8_t* framebuffer);
 
 
