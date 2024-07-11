@@ -34,6 +34,26 @@ struct UserData
 };
 
 
+static inline std::string getCurrentDateTime(std::string s) {
+	time_t now = time(0);
+	struct tm  tstruct;
+	char  buf[80];
+	tstruct = *localtime(&now);
+	if (s == "now")
+		strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
+	else if (s == "date")
+		strftime(buf, sizeof(buf), "%Y-%m-%d", &tstruct);
+	return  std::string(buf);
+};
+
+static inline void Logger(std::string logMsg) {
+	return; //activate only for debugging
+	std::string filePath = "./log_" + getCurrentDateTime("date") + ".txt";
+	std::string now = getCurrentDateTime("now");
+	std::ofstream ofs(filePath.c_str(), std::ios_base::out | std::ios_base::app);
+	ofs << now << '\t' << logMsg << '\n';
+	ofs.close();
+}
 
 
 class CameraCodecCallback : public IBlackmagicRawCallback
@@ -51,6 +71,10 @@ public:
 
 	virtual void ReadComplete(IBlackmagicRawJob* readJob, HRESULT result, IBlackmagicRawFrame* frame)
 	{
+		
+		char  buf[80];
+
+		Logger("ReadComplete");
 		UserData* userData = nullptr;
 		VERIFY(readJob->GetUserData((void**)&userData));
 
@@ -59,33 +83,44 @@ public:
 		if (result == S_OK)
 			VERIFY(frame->SetResourceFormat(s_resourceFormat));//forces output format and bits, must be set for avisynth operation, we dont support 1:1 formats
 
+		Logger("start CreateJobDecodeAndProcessFrame");
 		if (result == S_OK)
 			result = frame->CreateJobDecodeAndProcessFrame(nullptr, nullptr, &decodeAndProcessJob);
+		Logger("created CreateJobDecodeAndProcessFrame");
+
 
 		if (result == S_OK)
 			VERIFY(decodeAndProcessJob->SetUserData(userData));
 
+		Logger("setuserdata done");
+
 		if (result == S_OK)
 			result = decodeAndProcessJob->Submit();
 
+		Logger("decodeAndProcessJob->Submit() done");
+
 		if (result != S_OK)
 		{
+			Logger("Read Error");
 			if (decodeAndProcessJob)
 				decodeAndProcessJob->Release();
 
 			delete userData;
 		}
-
+		Logger("ReadComplete done");
 		readJob->Release();
 	}
 
 	virtual void ProcessComplete(IBlackmagicRawJob* job, HRESULT result, IBlackmagicRawProcessedImage* img)
 	{
+
+		Logger("Processcomplete");
+		
 		//get pointer to the pic
 		UserData* userData = nullptr;
 		VERIFY(job->GetUserData((void**)&userData));
 		
-
+		
 		UINT32 w, h;
 		img->GetWidth(&w);
 		img->GetHeight(&h);
@@ -94,10 +129,7 @@ public:
 		void* imageData = nullptr;
 		img->GetResource(&imageData);
 		img->GetResourceSizeBytes(&size);
-
-		//std::cout.write(reinterpret_cast<char*>(imageData), size);
-		//write pointer into 
-
+		
 		////write debug file
 		//char buffer[254]; // make sure it's big enough
 		//snprintf(buffer, sizeof(buffer), "C:\\temp\\file.raw", userData->frameIndex);
@@ -109,14 +141,21 @@ public:
 		//}
 
 		memcpy(userData->avs_framebuffer, imageData, size);
-
+		
+		//memset(userData->avs_framebuffer, 150, 3000000);
 		//finally we can signal avisynth to go on
 		*userData->job_done = true;
+		
 
 		delete userData;
-		img->Release();
+		
+		//img->Release(); //crashes if we do this AND relese the job!
+		
 		job->Release();
+		
 		--s_jobsInFlight;
+		return;
+		
 	}
 
 	virtual void DecodeComplete(IBlackmagicRawJob*, HRESULT) {}
@@ -144,6 +183,38 @@ public:
 		return newRefCount;
 	}
 };
+
+BRAWSDKProcessor::~BRAWSDKProcessor() {
+
+	if (codec != nullptr)
+		codec->FlushJobs();
+
+	if (clip != nullptr)
+		clip->Release();
+
+	if (codec != nullptr)
+		codec->Release();
+
+	if (factory != nullptr)
+		factory->Release();
+}
+
+void BRAWSDKProcessor::getAudioSamples(void* buf, int64_t start, int64_t count) {
+	uint32_t samplesRead;
+	uint32_t bytesRead;
+	char buff[128] = {};
+
+	HRESULT result = audio->GetAudioSamples(start,
+		buf,
+		(count * this->channelCount * this->audioBitDepth) / 8,//samplebufsize
+		count,//maxsamplecount
+		&samplesRead,
+		&bytesRead);
+	if (result != S_OK) {
+		sprintf(buff, "Failed to GetAudioSamples!");
+		throw std::runtime_error(buff);
+	}
+}
 
 bool* BRAWSDKProcessor::getFrameByNum(int frameNum, uint8_t * framebuffer) {
 	/* frame is returned in callback processcomplete */
@@ -251,7 +322,7 @@ HRESULT BRAWSDKProcessor::openFile(BSTR fileName, int bitmode) {
 	SysFreeString(libraryPath);
 	if (factory == nullptr)
 	{
-		sprintf(buff, "Failed to create IBlackmagicRawFactory!");
+		sprintf(buff, "Failed to create IBlackmagicRawFactory, did you place brawsource_dlls folder next to this dll`?");
 		throw std::runtime_error(buff);
 	}
 
@@ -259,7 +330,7 @@ HRESULT BRAWSDKProcessor::openFile(BSTR fileName, int bitmode) {
 	result = factory->CreateCodec(&codec);
 	if (result != S_OK)
 	{
-		sprintf(buff, "Failed to create IBlackmagicRaw!");
+		sprintf(buff, "Failed to create IBlackmagicRaw, this is unexpected, i don't know what could cause it!");
 		throw std::runtime_error(buff);
 	}
 			
@@ -267,54 +338,36 @@ HRESULT BRAWSDKProcessor::openFile(BSTR fileName, int bitmode) {
 		
 	if (result != S_OK)
 	{
-		sprintf(buff, "Failed to open IBlackmagicRawClip!");
+		sprintf(buff, "Failed to open IBlackmagicRawClip, is it in braw format?");
 		throw std::runtime_error(buff);
 	}
 
-	//in bmd example, codec->SetCallback(&callback); is done here but we cannot do this, we create the callback instance per frame in getFrameByNum class
-
+	//in bmd example, codec->SetCallback(&callback); is done here but as we add "userdata" dynamically, we do that in getFrameByNum
 
 	//analyze clip props
 	result = clip->GetFrameCount(&this->frameCount);
 	result = clip->GetWidth(&this->width);
 	result = clip->GetHeight(&this->height);
 	result = clip->GetFrameRate(&this->framerate);
-
+	
 	//hackily try to get fraction from framerate float, bmd skd does not seem to provide num and den
 	floatToFraction(this->framerate, this->framerate_num, this->framerate_den);
 
-	//result = clip->QueryInterface(IID_IBlackmagicRawClipAudio, (void**)&audio);
-	//
-	//if (result != S_OK)
-	//{
-	//	sprintf(buff, "Could not init Audioreader using BMD SDK!");
-	//	throw std::runtime_error(buff);
-	//}
 
-	//uint64_t audioSamples;
-	//uint32_t bitDepth;
-	//uint32_t channelCount;
-	//uint32_t sampleRate;
-	//result = audio->GetAudioSampleCount(&audioSamples);
-	//result = audio->GetAudioBitDepth(&bitDepth);
-	//result = audio->GetAudioChannelCount(&channelCount);
-	//result = audio->GetAudioSampleRate(&sampleRate);
-	//todo: do this in desctructor?
+	result = clip->QueryInterface(IID_IBlackmagicRawClipAudio, (void**)&audio);
 	
-	//codec->FlushJobs();
+	if (result != S_OK)
+	{
+		sprintf(buff, "Could not init Audioreader using BMD SDK!");
+		throw std::runtime_error(buff);
+	}
 
-	//if (clip != nullptr)
-	//	clip->Release();
 
-	//if (codec != nullptr)
-	//	codec->Release();
-
-	//if (factory != nullptr)
-	//	factory->Release();
-
-	//CoUninitialize();
-
-	//SysFreeString(fileName);
+	result = audio->GetAudioSampleCount(&this->audioSamples);
+	result = audio->GetAudioBitDepth(&this->audioBitDepth);
+	result = audio->GetAudioChannelCount(&this->channelCount);
+	result = audio->GetAudioSampleRate(&this->sampleRate);
+	//BlackmagicRawAudioFormat can only be littleendian
 
 	return result;
 

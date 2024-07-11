@@ -16,16 +16,22 @@ class BRAWSDKProcessor {
 	
 public:
 	
-
+    ~BRAWSDKProcessor();
 	unsigned long long frameCount = 0;
     unsigned int width;
     unsigned int height;
     float framerate;
     int framerate_num;
     int framerate_den;
+    
+    uint64_t audioSamples;
+    uint32_t audioBitDepth;
+    uint32_t channelCount;
+    uint32_t sampleRate;
+
 	HRESULT openFile(BSTR fileName, int bitmode);
     bool* getFrameByNum(int frameNum, uint8_t* framebuffer);
-
+    void getAudioSamples(void* buf, int64_t start, int64_t count);
 
     IBlackmagicRaw* codec = nullptr;
     IBlackmagicRawClip* clip = nullptr;
