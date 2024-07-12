@@ -10,11 +10,22 @@
 
 /*
 * 
-    BMD SDK is referenced from original install directory, see bmd.h
+    BMD SDK BlackmagicRawAPIDispatch.h is referenced from original BMD SDK install directory, see bmd.h
+
+    After installing BMD SDK, you should find BlackmagicAPI.h and BlackmagicRawAPI_i.c  in some examples/generated folder.
+    Copy them to this projects source/generated folder and build.
+
+    Alternatively:
     Make sure that BlackmagicRawAPI.idl (comes with BMD SDK) is added to the root of your main project.
-    When compiling, VS should automatically extract BlackmagicAPI.h from the idl (using project settings MIDL section)
+    When compiling, VS should automatically extract BlackmagicAPI.h and BlackmagicRawAPI_i.c from the idl (using project settings MIDL section)
     and copy the .h to ./src/generated folder which is added to the include directories, this way the referenced BlackmagicRawAPIDispatch.h
     can find the BlackmagicAPI.h.
+
+    For Running the build, make sure to copy 
+    C:\Program Files (x86)\Blackmagic Design\Blackmagic RAW\Blackmagic RAW SDK\Win\Libraries
+    to
+    vs2022\x64\Release\brawsource_dlls (or whatever you set as build folder), see bmd.cpp CreateBlackmagicRawFactoryInstanceFromPath
+
 */
 
 #include "bmd.h"
