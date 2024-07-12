@@ -10,15 +10,12 @@
 
 /*
 * 
-    BMD SDK is referenced from original install directory.
+    BMD SDK is referenced from original install directory, see bmd.h
     Make sure that BlackmagicRawAPI.idl (comes with BMD SDK) is added to the root of your main project.
     When compiling, VS should automatically extract BlackmagicAPI.h from the idl (using project settings MIDL section)
     and copy the .h to ./src/generated folder which is added to the include directories, this way the referenced BlackmagicRawAPIDispatch.h
     can find the BlackmagicAPI.h.
 */
-
-#include "C:\Program Files (x86)\Blackmagic Design\Blackmagic RAW\Blackmagic RAW SDK\Win\Include\BlackmagicRawAPIDispatch.h" //part of bmd sdk
-#include "./generated/BlackmagicRawAPI_i.c"; //should be built by compiling BlackmagicRawAPI.idl File
 
 #include "bmd.h"
 #include <io.h>
@@ -133,14 +130,12 @@ void __stdcall BRawAudioSource::GetAudio(void* buf, int64_t start, int64_t count
     }
 }
 
-
 #pragma endregion audiosource
 
-/* VIDEO SOURCE */
+#pragma region videosource
 
 class BRawSource : public IClip {
     
-
     VideoInfo vi;
 
     void(__stdcall *writeDestFrame)(
@@ -151,16 +146,11 @@ public:
 
     BRawSource(const char *source,int bitmode, ise_t* env);
     
-    ~BRawSource() { 
-        /*_aligned_free(rawbuf);*/
-    }
-
+    ~BRawSource() {}
 
     bool __stdcall GetParity(int n) { return vi.image_type == VideoInfo::IT_TFF; }
     void __stdcall GetAudio(void* buf, int64_t start, int64_t count, ise_t* env);
-
     PVideoFrame __stdcall GetFrame(int n, ise_t* env);
-
     const VideoInfo& __stdcall GetVideoInfo() { return vi; }
     int __stdcall SetCacheHints(int cachehints,int frame_range) { return 0; }
 
@@ -168,7 +158,6 @@ public:
     BRAWSDKProcessor* bmdproc;
     BRawAudioSource* AudioSource;
     
-
     int bitmode = 8;
     PClip PostInit(ise_t* env);
 
@@ -188,7 +177,6 @@ BRawSource::BRawSource (const char *source, int bitmode, ise_t* env)
     const int height = this->bmdproc->height;
     const int fpsnum = this->bmdproc->framerate_num;
     const int fpsden = this->bmdproc->framerate_den;
-
 
     memset(&vi, 0, sizeof(VideoInfo));
     vi.width = width;
@@ -229,21 +217,18 @@ PClip BRawSource::PostInit(ise_t* env) {
         //blackmagicRawResourceFormatBGRAU8 which matches BGRA, must be flipped
         AVSValue avsv[1] = { this };
         final_clip = env->Invoke("FlipVertical", AVSValue(avsv, 1)).AsClip();
-        
     }
     if (this->bitmode == 16) {
         // blackmagicRawResourceFormatRGBU16Planar which matches RGBP16 but B and R Planes must be switched as bmd returns BGR not RGB
         const char* names[] = { NULL, "planes", "source_planes", "pixel_type" };
         AVSValue avsv[4] = { this,"RGB","GBR","RGBP16" };
         final_clip = env->Invoke("CombinePlanes", AVSValue(avsv, 4), names).AsClip();
-        
     }
     if (this->bitmode == 32) {
        // blackmagicRawResourceFormatRGBF32Planar which matches RGBAPS but B and R Planes must be switched as bmd returns BGR not RGB
         const char* names[] = { NULL, "planes", "source_planes", "pixel_type" };
         AVSValue avsv[4] = { this,"RGB","GBR","RGBPS"};
         final_clip = env->Invoke("CombinePlanes", AVSValue(avsv, 4),names).AsClip();
-        
     }
 
     //add audio
@@ -280,6 +265,10 @@ PVideoFrame __stdcall BRawSource::GetFrame(int n, ise_t* env)
     return dst;
 }
 
+#pragma endregion videosource
+
+#pragma region avisnyth init
+
 AVSValue __cdecl initiate_everything(AVSValue args, void* user_data, ise_t* env)
 {
     char buff[128] = {};
@@ -296,12 +285,10 @@ AVSValue __cdecl initiate_everything(AVSValue args, void* user_data, ise_t* env)
         }
         validate(!(bitmode==8|| bitmode==16|| bitmode==32), "bit parameter must be 8,16 or 32");
 
-
         //calls BMD SDK to open and analyze the file properties
         const char* source = args[0].AsString();
         BRawSource * brawsource = new BRawSource(source, bitmode, env);
         PClip postInitClip = brawsource->PostInit(env);
-
 
         return postInitClip;
 
@@ -331,4 +318,4 @@ AvisynthPluginInit3(ise_t* env, const AVS_Linkage* const vectors)
     return "BRawSource for AviSynth2.6x/Avisynth+.";
 }
 
-//endregion
+#pragma endregion avisnyth init

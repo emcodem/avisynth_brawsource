@@ -4,13 +4,16 @@
 #define BMDPROCESSORHEADER_H
 
 #include "C:\Program Files (x86)\Blackmagic Design\Blackmagic RAW\Blackmagic RAW SDK\Win\Include\BlackmagicRawAPIDispatch.h"
+//built by compiling BlackmagicRawAPI.idl File (as BlackmagicRawAPI.h)
+#include "generated/BlackmagicRawAPI_i.c"
+//BlackmagicRawAPI.h is expected to be in src/generated folder as well (or in any other include dir
+
 /* Note that we also add the BlackmagicRawAPIDispatch.cpp file in our project from the same folder */
 
 #include <atomic>
 #include <chrono>
 #include <iostream>
 #include <thread>
-
 
 class BRAWSDKProcessor {
 	
@@ -36,18 +39,7 @@ public:
     IBlackmagicRaw* codec = nullptr;
     IBlackmagicRawClip* clip = nullptr;
     IBlackmagicRawFactory* factory = nullptr;
-    //IBlackmagicRaw* codec = nullptr;
-    //IBlackmagicRawClip* clip = nullptr;
     IBlackmagicRawConfiguration* config = nullptr;
-    //"[file]s"
-    //    "[width]i"
-    //    "[height]i"
-    //    "[pixel_type]s"
-    //    "[fpsnum]i"
-    //    "[fpsden]i"
-    //    "[index]s"
-
-    //    "[show]b";
 
 };
 #endif

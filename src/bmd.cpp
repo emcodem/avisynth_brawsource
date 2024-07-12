@@ -33,7 +33,6 @@ struct UserData
 	uint8_t* avs_framebuffer;
 };
 
-
 static inline std::string getCurrentDateTime(std::string s) {
 	time_t now = time(0);
 	struct tm  tstruct;
@@ -54,7 +53,6 @@ static inline void Logger(std::string logMsg) {
 	ofs << now << '\t' << logMsg << '\n';
 	ofs.close();
 }
-
 
 class CameraCodecCallback : public IBlackmagicRawCallback
 {
@@ -120,7 +118,6 @@ public:
 		UserData* userData = nullptr;
 		VERIFY(job->GetUserData((void**)&userData));
 		
-		
 		UINT32 w, h;
 		img->GetWidth(&w);
 		img->GetHeight(&h);
@@ -142,7 +139,6 @@ public:
 
 		memcpy(userData->avs_framebuffer, imageData, size);
 		
-		//memset(userData->avs_framebuffer, 150, 3000000);
 		//finally we can signal avisynth to go on
 		*userData->job_done = true;
 		
@@ -256,7 +252,6 @@ bool* BRAWSDKProcessor::getFrameByNum(int frameNum, uint8_t * framebuffer) {
 	if (result == S_OK)
 		result = jobRead->Submit();
 
-
 	if (result != S_OK)
 	{
 		if (userData != nullptr)
@@ -326,14 +321,13 @@ HRESULT BRAWSDKProcessor::openFile(BSTR fileName, int bitmode) {
 		throw std::runtime_error(buff);
 	}
 
-
 	result = factory->CreateCodec(&codec);
 	if (result != S_OK)
 	{
 		sprintf(buff, "Failed to create IBlackmagicRaw, this is unexpected, i don't know what could cause it!");
 		throw std::runtime_error(buff);
 	}
-			
+
 	result = codec->OpenClip(fileName, &clip);
 		
 	if (result != S_OK)
@@ -353,7 +347,6 @@ HRESULT BRAWSDKProcessor::openFile(BSTR fileName, int bitmode) {
 	//hackily try to get fraction from framerate float, bmd skd does not seem to provide num and den
 	floatToFraction(this->framerate, this->framerate_num, this->framerate_den);
 
-
 	result = clip->QueryInterface(IID_IBlackmagicRawClipAudio, (void**)&audio);
 	
 	if (result != S_OK)
@@ -361,7 +354,6 @@ HRESULT BRAWSDKProcessor::openFile(BSTR fileName, int bitmode) {
 		sprintf(buff, "Could not init Audioreader using BMD SDK!");
 		throw std::runtime_error(buff);
 	}
-
 
 	result = audio->GetAudioSampleCount(&this->audioSamples);
 	result = audio->GetAudioBitDepth(&this->audioBitDepth);
