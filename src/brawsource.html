@@ -10,13 +10,14 @@
 <p>for AviSynth 2.6.0 / Avisynth+ r2005 or greater</p>
 <h4>requirements</h4>
 <ul>
-    <li>Windows Vista sp2 or later</li>
+    <li>Windows Vista x64 sp2 or later</li>
     <li>avisynth2.6.0 or later / Avisynth+ r1576 or greater</li>
-    <li>Visual C++ Redistributable for Visual Studio 2015</li>
+    <li>Lots of RAM (16GB+)</li>
+
 </ul>
 <h4>How to use</h4>
-<p><code>BRawSource</code> (<var>string &quot;file&quot;</var>)<br>
+<p><code>BRawSource</code> (<var>string &quot;file&quot;</var>,<var>int &quot;bits(8,16,32)&quot;</var>)<br>
 </p>
-Version 2024-07-07 - First release.<br>
+Parameter bits can be 8,16,32. Forces output video frames to these bits, independent of input bits. Only 32 has alpha. 8 is default.
 </body>
 </html>
