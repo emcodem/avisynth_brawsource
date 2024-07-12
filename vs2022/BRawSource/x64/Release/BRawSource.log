@@ -1,26 +1,2 @@
-﻿  64 bit Processing ..\..\..\..\Program Files (x86)\Blackmagic Design\Blackmagic RAW\Blackmagic RAW SDK\Win\Include\BlackmagicRawAPI.idl
-  BlackmagicRawAPI.idl
-  64 bit Processing C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\unknwn.idl
-  unknwn.idl
-  64 bit Processing C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\wtypes.idl
-  wtypes.idl
-  64 bit Processing C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\wtypesbase.idl
-  wtypesbase.idl
-  64 bit Processing C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\basetsd.h
-  basetsd.h
-  64 bit Processing C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\guiddef.h
-  guiddef.h
-  64 bit Processing C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\oaidl.idl
-  oaidl.idl
-  64 bit Processing C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\objidl.idl
-  objidl.idl
-  64 bit Processing C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um\oaidl.acf
-  oaidl.acf
-  BlackmagicRawAPIDispatch.cpp
-  bmd.cpp
-  brawsource.cpp
-C:\dev\avs_rawsource\RawSource_2.6x\src\brawsource.cpp(21,10): warning C4067: Unerwartete Token nach Präprozessordirektive - Zeilenvorschub erwartet.
-  common.cpp
-  Code wird generiert...
-     Bibliothek "C:\dev\avs_rawsource\RawSource_2.6x\vs2022\x64\Release\BRawSource.lib" und Objekt "C:\dev\avs_rawsource\RawSource_2.6x\vs2022\x64\Release\BRawSource.exp" werden erstellt.
+﻿     Bibliothek "C:\dev\avs_rawsource\RawSource_2.6x\vs2022\x64\Release\BRawSource.lib" und Objekt "C:\dev\avs_rawsource\RawSource_2.6x\vs2022\x64\Release\BRawSource.exp" werden erstellt.
   BRawSource.vcxproj -> C:\dev\avs_rawsource\RawSource_2.6x\vs2022\x64\Release\BRawSource.dll
