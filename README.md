@@ -10,5 +10,4 @@ Please use the FFAStrans forum chat to contact me, Issues here will not be viewe
 See brawsource.cpp for build instructions, developers will need to download Blackmagic RAW SDK.
 My BlackmagicRawAPI.idl file says version(0.1), it is from 2024
 
-
-
+Also on Doom 9: https://forum.doom9.org/showthread.php?t=185608
